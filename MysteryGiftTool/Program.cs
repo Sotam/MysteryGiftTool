@@ -25,6 +25,9 @@ namespace MysteryGiftTool
 
         private static readonly Game[] games =
         {
+            new Game {Name = "Bank", ID = "vgBivYesOH9RS5I8", Generation=7 },
+            new Game {Name = "UltraMoon",ID= "b3Gq6LF6EqE1bvKy", Generation=7},
+            new Game {Name = "UltraSun", ID= "fnCAH3KrGIl9dgSd", Generation=7 },
             new Game {Name = "Sun", ID = "8QjtffIMWFhiFpTz", Generation = 7},
             new Game {Name = "Moon", ID = "7mXz0DXR4b4CdD8r", Generation = 7},
             new Game {Name = "X", ID = "h0VRqB2YEgq39zvO", Generation = 6},
