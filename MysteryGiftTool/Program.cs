@@ -35,7 +35,7 @@ namespace MysteryGiftTool
             new Game {Name = "Omega Ruby", ID = "cRFY0WFHNjPh44If", Generation = 6},
             new Game {Name = "Alpha Sapphire", ID = "guBwm9TlQvYvncKn", Generation = 6}
         };
-        
+
 
 
         public static void CreateDirectoryIfNull(string dir)
@@ -196,8 +196,7 @@ namespace MysteryGiftTool
                     File.WriteAllBytes(dec_path, dec_data);
 
                     var contentData = dec_data.Skip(0x296).ToArray();
-                    byte[] prev = null;
-                    if (contentData.Length % 0x310 == 0 // Wondercard!
+                    if (contentData.Length % 0x310 == 0) // Wondercard!
                     {
                         var wcgdir = Path.Combine("wondercards", game.Name);
                         var wcdir = Path.Combine(wcgdir, $"wc{game.Generation}");
