@@ -26,13 +26,10 @@ Menu_Exit = 退出
 --
 Menu_Tools = 工具
 Menu_Showdown = Showdown
-Menu_ShowdownImportPKM = 从剪贴板导入组合
-Menu_ShowdownExportPKM = 导出组合到剪贴板
+Menu_ShowdownImportPKM = 从剪贴板导入宝可梦
+Menu_ShowdownExportPKM = 导出宝可梦到剪贴板
 Menu_ShowdownExportParty = 导出同行队伍到剪贴板
 Menu_ShowdownExportBattleBox = 导出战斗盒子到剪贴板
-Menu_CyberGadget = CyberGadget
-Menu_OpenTemp = 打开临时文件夹(Temp)
-Menu_OpenCache = 打开缓存文件夹(Cache)
 Menu_Data = 数据
 Menu_LoadBoxes = 加载盒子信息
 Menu_DumpBoxes = 导出盒子信息
@@ -40,15 +37,13 @@ Menu_Report = 盒子数据报告
 Menu_Database = PKM数据库
 Menu_MGDatabase = 神秘礼物数据库
 Menu_BatchEditor = 批量编辑器
-Menu_Other = 其他
-Menu_OpenSDF = 打开SaveDataFiler文件夹
-Menu_OpenSDB = 打开SaveDataBackup文件夹
+Menu_Folder = 打开文件夹
 --
 Menu_Options = 设置
 Menu_Language = 语言
 Menu_Modify = 对SAV的设置
 Menu_ModifyDex = 修改图鉴
-Menu_ModifyPKM = 修改PKM信息
+Menu_ModifyPKM = 修改宝可梦
 Menu_Unicode = Unicode
 Menu_About = 关于PKHeX
 --------------------Context Menus----------------------
@@ -80,7 +75,7 @@ Label_SubRegion = 地区:
 Label_3DSRegion = 3DS区域:
 ---------------------Met Tab Data-----------------------
 Tab_Met = 相遇
-Label_OriginGame = 原始版本:
+Label_OriginGame = 来源版本:
 Label_MetLocation = 地点:
 Label_Ball = 精灵球种类:
 Label_MetLevel = 相遇时等级:
@@ -115,20 +110,21 @@ Label_Cool = 帅气
 Label_Beauty = 美丽
 Label_Cute = 可爱
 Label_Smart = 聪明
+Label_Clever = 聪明
 Label_Tough = 强壮
 Label_Sheen = 光泽
 -------------------Attacks Tab Data---------------------
 Tab_Attacks = 招式
 GB_CurrentMoves = 招式
 Label_CurPP = PP
-Label_PPups = PP上升数
-GB_RelearnMoves = 遗传招式
+Label_PPups = PP提升
+GB_RelearnMoves = 回忆招式
 -------------------OT/Misc Tab Data---------------------
 Tab_OTMisc = 初训家/杂项
-GB_OT = 相关信息
+GB_OT = 初训家信息
 Label_TID = 表ID
 Label_SID = 里ID
-Label_OT = OT
+Label_OT = 名字
 GB_nOT = 最近持有人（非初训家）
 Label_PrevOT = 名字
 GB_ExtraBytes = 额外字节
@@ -151,7 +147,7 @@ B_OUTPasserby = 路人
 B_OpenBoxLayout = 盒子布局
 B_OpenWondercards = 神秘礼物
 B_OpenSuperTraining = 超级训练
-B_OpenHallofFame = 殿堂
+B_OpenHallofFame = 名人堂
 B_OpenOPowers =  O-Power
 B_OpenEventFlags = 事件旗标
 B_OpenPokedex = 宝可梦图鉴
@@ -165,9 +161,9 @@ B_CGearSkin = C装置皮肤
 L_Party = 同行
 L_BattleBox = 战斗箱
 L_ReadOnlyPBB = 只读
-GB_Daycare = 饲育屋
+GB_Daycare = 寄放屋
 GB_GTS = GTS
-GB_Fused = Fused
+GB_Fused = 合体
 GB_SUBE = SUBE
 DayCare_HasEgg = 拥有蛋
 L_DaycareSeed = Seed
@@ -181,117 +177,16 @@ L_Secure2 = Secure Value 2:
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! RibbonEditor = Ribbon Editor
+! RibbonEditor = 奖章
 - Change stuff below this line, not above.
 ----------------------Buttons--------------------------
-BTN_All = 获得全部
-BTN_None = 全部清除
-BTN_Cancel = 取消
-BTN_Save = 保存
-----------------------Ribbons--------------------------
-L_RibbonChampionKalos = 卡洛斯冠军
-L_RibbonChampionG3Hoenn = 丰缘冠军 (RSE)
-L_RibbonChampionSinnoh = 神奥冠军
-L_RibbonBestFriends = 友谊
-L_RibbonTraining = 苦练
-L_RibbonBattlerSkillful = 战技
-L_RibbonBattlerExpert = 战王
-L_RibbonEffort = 努力
-L_RibbonAlert = 警告
-L_RibbonShock = 震惊
-L_RibbonDowncast = 低落
-L_RibbonCareless = 疏忽
-L_RibbonRelax = 放松
-L_RibbonSnooze = 小憩
-L_RibbonSmile = 微笑
-L_RibbonGorgeous = 光辉
-L_RibbonRoyal = 皇家
-L_RibbonGorgeousRoyal = 光辉皇家
-L_RibbonArtist = 肖像
-L_RibbonFootprint = 足迹
-L_RibbonRecord = 记录
-L_RibbonLegend = 传说
-L_RibbonCountry = 国家
-L_RibbonNational = 国际
-L_RibbonEarth = 大地
-L_RibbonWorld = 世界
-L_RibbonClassic = 经典
-L_RibbonPremier = 首席
-L_RibbonEvent = 事件
-L_RibbonBirthday = 生日
-L_RibbonSpecial = 特别
-L_RibbonSouvenir = 纪念
-L_RibbonWishing = 希望
-L_RibbonChampionBattle = 对战冠军
-L_RibbonChampionRegional = 地区冠军
-L_RibbonChampionNational = 国家冠军
-L_RibbonChampionWorld = 世界冠军
-L_RibbonCountMemoryContest = 以前的华丽大赛奖章
-L_RibbonCountMemoryBattle = 以前的对战塔奖章
-L_RibbonChampionG6Hoenn = 丰缘冠军 (ORAS)
-L_RibbonContestStar = 华丽大赛之星
-L_RibbonMasterCoolness = 帅气大师
-L_RibbonMasterBeauty = 美丽大师
-L_RibbonMasterCuteness = 可爱大师
-L_RibbonMasterCleverness = 聪明大师
-L_RibbonMasterToughness = 强壮大师
-----------------Contest/Battle (PAST)------------------
-L_RibbonG3Cool = 帅气 (G3)
-L_RibbonG3CoolSuper = 帅气超级
-L_RibbonG3CoolHyper = 帅气特级
-L_RibbonG3CoolMaster = 帅气大师
-L_RibbonG3Beauty = 美丽 (G3)
-L_RibbonG3BeautySuper = 美丽超级
-L_RibbonG3BeautyHyper = 美丽特级
-L_RibbonG3BeautyMaster = 美丽大师
-L_RibbonG3Cute = 可爱 (G3)
-L_RibbonG3CuteSuper = 可爱超级
-L_RibbonG3CuteHyper = 可爱特级
-L_RibbonG3CuteMaster = 可爱大师
-L_RibbonG3Smart = 聪明 (G3)
-L_RibbonG3SmartSuper = 聪明超级
-L_RibbonG3SmartHyper = 聪明特级
-L_RibbonG3SmartMaster = 聪明大师
-L_RibbonG3Tough = 强壮 (G3)
-L_RibbonG3ToughSuper = 强壮超级
-L_RibbonG3ToughHyper = 强壮特级
-L_RibbonG3ToughMaster = 强壮大师
-L_RibbonG4Cool = 帅气 (G4)
-L_RibbonG4CoolGreat = 帅气超级
-L_RibbonG4CoolUltra = 帅气特级
-L_RibbonG4CoolMaster = 帅气大师
-L_RibbonG4Beauty = 美丽 (G4)
-L_RibbonG4BeautyGreat = 美丽超级
-L_RibbonG4BeautyUltra = 美丽特级
-L_RibbonG4BeautyMaster = 美丽大师
-L_RibbonG4Cute = 可爱 (G4)
-L_RibbonG4CuteGreat = 可爱超级
-L_RibbonG4CuteUltra = 可爱特级
-L_RibbonG4CuteMaster = 可爱大师
-L_RibbonG4Smart = 聪明 (G4)
-L_RibbonG4SmartGreat = 聪明超级
-L_RibbonG4SmartUltra = 聪明特级
-L_RibbonG4SmartMaster = 聪明大师
-L_RibbonG4Tough = 强壮 (G4)
-L_RibbonG4ToughGreat = 强壮超级
-L_RibbonG4ToughUltra = 强壮特级
-L_RibbonG4ToughMaster = 强壮大师
-L_RibbonWinning = 成功
-L_RibbonVictory = 胜利
-L_RibbonAbility = 才能
-L_RibbonAbilityGreat = 超级才能
-L_RibbonAbilityDouble = 双人才能
-L_RibbonAbilityMulti = 配合才能
-L_RibbonAbilityPair = 组队双打才能
-L_RibbonAbilityWorld = 世界才能
-L_RibbonCountG3Cool = 帅气
-L_RibbonCountG3Beauty = 美丽
-L_RibbonCountG3Cute = 可爱
-L_RibbonCountG3Smart = 聪明
-L_RibbonCountG3Tough = 强壮
+B_All = 获得全部
+B_None = 全部清除
+B_Cancel = 取消
+B_Save = 保存
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION. 
-! SuperTrainingEditor = Medal Editor
+! SuperTrainingEditor = 超级训练奖章
 - Change stuff below this line, not above.
 ----------------------Buttons--------------------------
 B_All = 获得全部
@@ -337,7 +232,7 @@ L_Hits = 剩余点数:
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! MemoryAmie = Memory / Amie Editor
+! MemoryAmie = 回忆/清爽乐
 - Change stuff below this line, not above.
 ---------------------Bottom UI-------------------------
 BTN_Cancel = 取消
@@ -346,10 +241,10 @@ L_Handler = 现在的主人:
 -
 Tab_OTMemory = 与初训家的回忆
 L_OT_Friendship = 亲密度:
-L_OT_Affection = 牵绊度:
+L_OT_Affection = 友好度:
 Tab_CTMemory = 与持有人的回忆
 L_CT_Friendship = 亲密度:
-L_cT_Affection = 牵绊度:
+L_cT_Affection = 友好度:
 Tab_Residence = 居住地
 --
 L_Country = 国家
@@ -360,18 +255,18 @@ L_Geo2 = 故居2:
 L_Geo3 = 故居3:
 L_Geo4 = 故居4:
 --
-L_Arguments = 关闭 ; 从未离开 ; 原主人 ; 前作 ; 回忆 ; 宝可梦 ; 地区 ; 道具 ; 移动 ; 位置 ;
+L_Arguments = 关闭 ; 从未离开 ; 初训家 ; 前代 ; 回忆 ; 宝可梦 ; 地区 ; 道具 ; 移动 ; 位置 ;
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION. 
-! f2_Text = Special Characters
+! f2_Text = 特殊字符
 - Change stuff below this line, not above.
 -------------------------------------------------------
 -- No Elements to rename here.
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! SAV_PokeBlockORAS = Pokéblock Editor
+! SAV_PokeBlockORAS = 宝可方块
 - Change stuff below this line, not above.
 -------------------------------------------------------
 L_Red = 红色宝可方块:
@@ -382,7 +277,7 @@ L_Yellow = 黄色宝可方块:
 L_Rainbow = 彩虹宝可方块:
 L_Red = 红色宝可方块+:
 L_Blue = 蓝色宝可方块+:
-L_Pink = 粉色宝可方块 +:
+L_Pink = 粉色宝可方块+:
 L_Green = 绿色宝可方块+:
 L_Yellow = 黄色宝可方块+:
 L_Rainbow = 彩虹宝可方块+:
@@ -393,14 +288,14 @@ B_Save = 保存
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! SAV_Link6 = Pokémon Link Tool
+! SAV_Link6 = 宝可梦连接工具
 - Change stuff below this line, not above.
 -------------------------------------------------------
 TAB_Main = 主界面
 TAB_PKM = 宝可梦
 TAB_Items = 道具
-L_BP = 战斗点数BP:
-L_Pokemiles: 宝可梦里程
+L_BP = 对战点数:
+L_Pokemiles = 宝可里程:
 CHK_LinkAvailable = 宝可梦连接开启
 B_Import = 导入
 B_Export = 导出
@@ -415,7 +310,7 @@ L_Item6 = 道具6:
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION. 
-! SuperTrain = Super Training Records
+! SuperTrain = 超级训练记录
 - Change stuff below this line, not above.
 ----------------------Buttons--------------------------
 L_Records = 记录
@@ -431,7 +326,7 @@ B_Cancel = 取消
 B_Save = 保存
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! SAV_BerryField = Berry Field Viewer
+! SAV_BerryField = 树果田查看器
 - Change stuff below this line, not above.
 -------------------------------------------------------
 L_Berry = 树果:
@@ -449,7 +344,7 @@ B_Save = 保存
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION. Memories / Amie UI Below
-! SAV_BoxLayout = Box Layout Editor
+! SAV_BoxLayout = 盒子外观
 - Change stuff below this line, not above.
 -------------------------------------------------------
 L_Unlocked = 已解锁:
@@ -461,7 +356,7 @@ L_BoxName = 盒子的名字:
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! SAV_EventFlagsORAS = Event Flag Editor (ORAS)
+! SAV_EventFlagsORAS = 事件旗标编辑(ORAS)
 - Change stuff below this line, not above.
 ------------------------------------------------------
 L_Ash = 火山灰:
@@ -547,7 +442,7 @@ B_Cancel = 取消
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! SAV_EventFlagsXY = Event Flag Editor (XY)
+! SAV_EventFlagsXY = 事件旗标编辑(XY)
 - Change stuff below this line, not above.
 -------------------------------------------------------
 flag_2546 = 图鉴已获得
@@ -589,7 +484,7 @@ B_Cancel = 取消
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! SAV_PokedexORAS = Pokédex Editor (ORAS)
+! SAV_PokedexORAS = 图鉴编辑(ORAS)
 - Change stuff below this line, not above.
 ------------------------------------------------------
 L_goto = 转到:
@@ -622,7 +517,7 @@ B_Cancel = 取消
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! SAV_PokedexXY = Pokédex Editor (XY)
+! SAV_PokedexXY = 图鉴编辑(XY)
 - Change stuff below this line, not above.
 -------------------------------------------------------
 L_goto = 转到:
@@ -655,7 +550,7 @@ B_Cancel = 取消
 ! End
 -------------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! SAV_HallOfFame = Hall of Fame Editor
+! SAV_HallOfFame = 名人堂
 - Change stuff below this line, not above.
 -------------------------------------------------------
 B_CopyText = 复制文本
@@ -680,7 +575,7 @@ B_Close = 保存
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! SAV_Inventory = Inventory Editor
+! SAV_Inventory = 物品栏
 - Change stuff below this line, not above.
 -------------------------------------------------------
 B_GiveAll = 获得所有
@@ -689,7 +584,7 @@ B_Cancel = 取消
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! SAV_OPower = O-Power Editor
+! SAV_OPower = O-Power
 - Change stuff below this line, not above.
 -------------------------------------------------------
 GB_Regular = 常规
@@ -726,7 +621,7 @@ B_Cancel = 取消
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! SAV_Pokepuff = ‎Poké Puffs Editor
+! SAV_Pokepuff = 宝可泡芙
 - Change stuff below this line, not above.
 -------------------------------------------------------
 L_Count = 计数:
@@ -738,7 +633,7 @@ B_Save = 保存
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! SAV_SecretBase = Secret Base Editor
+! SAV_SecretBase = 秘密基地
 - Change stuff below this line, not above.
 -------------------------------------------------------
 L_FlagsCaptured = 已获得旗标: 
@@ -778,12 +673,12 @@ L_DEF = 防御
 L_SpA = 特攻
 L_SpD = 特防
 L_SPE = 速度
-L_PKFriendship = 友谊:
-L_PPUps = PP上升
+L_PKFriendship = 亲密度:
+L_PPUps = PP提升
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! SAV_Trainer = Trainer Data Editor
+! SAV_Trainer = 训练家资料
 - Change stuff below this line, not above.
 -------------------------------------------------------
 Tab_Multiplayer = 多人游戏
@@ -823,16 +718,16 @@ L_SuperC = 超级
 L_NormalC = 普通
 L_MultiC = 多人:
 L_RotationC = 轮盘:
-L_TriplesC = 3v3:
-L_DoublesC = 2v2:
+L_TriplesC = 三打:
+L_DoublesC = 双打:
 L_SinglesC = 单打:
 GB_MaisonBest = 对战宅第连胜数 (最佳)
 L_SuperB = 超级
 L_NormalB = 普通
 L_MultiB = 多人:
 L_RotationB = 轮盘:
-L_TriplesB = 3v3:
-L_DoublesB = 2v2:
+L_TriplesB = 三打:
+L_DoublesB = 双打:
 L_SinglesB = 单打:
 B_Save = 保存
 L_Stats = 统计
@@ -854,18 +749,18 @@ L_Seconds = 秒:
 L_Minutes = 分:
 L_Hours = 时:
 L_Started = 游戏已进行:
-L_Fame = 进入殿堂:
+L_Fame = 登入名人堂:
 L_LastSaved = 上一次保存:
 -
-L_PM = 宝可梦里程:
-L_BP = BP:
+L_PM = 宝可里程:
+L_BP = 对战点数:
 L_Style = 风格:
 L_Value = 值
 L_Offset = (偏移)
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! SAV_Wondercard = Mystery Gift I/O
+! SAV_Wondercard = 神秘礼物导入导出
 - Change stuff below this line, not above.
 -------------------------------------------------------
 L_Details = 说明:
@@ -877,7 +772,7 @@ B_Save = 保存
 ! End
 ! -----------------------------------------------------
 - DO NOT CHANGE THIS SECTION.
-! ErrorWindow = Error
+! ErrorWindow = 错误
 - Change stuff below this line, not above.
 -------------------------------------------------------
 L_ProvideInfo = 提交错误报告时请提供以下信息: 

@@ -37,6 +37,7 @@ namespace MysteryGiftTool
         };
         
 
+
         public static void CreateDirectoryIfNull(string dir)
         {
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
@@ -92,7 +93,7 @@ namespace MysteryGiftTool
                 {
                     keep_log = true;
                     Log("Decrypting and extracting gifts...");
-                    GameInfo.Strings = GameInfo.getStrings("en");
+                    GameInfo.Strings = GameInfo.GetStrings("en");
                     ExtractArchives();
                 }
                 else
@@ -194,8 +195,9 @@ namespace MysteryGiftTool
                     Log($"Decrypted {boss.FileName}.");
                     File.WriteAllBytes(dec_path, dec_data);
 
-                    var content_data = dec_data.Skip(0x296).ToArray();
-                    if (content_data.Length == 0x310) // Wondercard!
+                    var contentData = dec_data.Skip(0x296).ToArray();
+                    byte[] prev = null;
+                    if (contentData.Length % 0x310 == 0 // Wondercard!
                     {
                         var wcgdir = Path.Combine("wondercards", game.Name);
                         var wcdir = Path.Combine(wcgdir, $"wc{game.Generation}");
@@ -204,30 +206,42 @@ namespace MysteryGiftTool
                         CreateDirectoryIfNull(wcdir);
                         CreateDirectoryIfNull(wcfulldir);
 
-                        File.WriteAllBytes(Path.Combine(wcfulldir, boss.FileName + $".wc{game.Generation}full"), content_data);
-
-                        MysteryGift wc = null;
-                        if (game.Generation == 6)
+                        var count = 0;
+                        do
                         {
-                            wc = new WC6(content_data);
-                            File.WriteAllBytes(Path.Combine(wcdir, boss.FileName + $".wc{game.Generation}"), wc.Data);
-                        }
-                        else if (game.Generation == 7)
-                        {
-                            wc = new WC7(content_data);
-                            File.WriteAllBytes(Path.Combine(wcdir, boss.FileName + $".wc{game.Generation}"), wc.Data);
-                        }
+                            count++;
+                            var currentWc = contentData.Take(0x310).ToArray();
+                            File.WriteAllBytes(Path.Combine(wcfulldir, boss.FileName + $"_{count}.wc{game.Generation}full"), currentWc);
 
-                        Log($"{boss.FileName} is a wondercard ({wc.Type}): ");
-                        Log(wc.FullDesc);
-                        Log(MysteryGift.getDescription(wc));
+                            MysteryGift wc = null;
+                            if (game.Generation == 6)
+                            {
+                                wc = new WC6(currentWc);
+                                File.WriteAllBytes(Path.Combine(wcdir, boss.FileName + $"{count}.wc{game.Generation}"), wc.Data);
+                            }
+                            else if (game.Generation == 7)
+                            {
+                                wc = new WC7(currentWc);
+                                File.WriteAllBytes(Path.Combine(wcdir, boss.FileName + $"{count}.wc{game.Generation}"), wc.Data);
+                            }
+
+                            Log($"{boss.FileName} ({count}) is a wondercard ({wc.Type}): ");
+                            var fullDesc = Util.TrimFromZero(Encoding.Unicode.GetString(currentWc, 4, 0x1FC));
+                            Log(fullDesc);
+
+                            Log(GetWonderCardDescription(wc));
+                            contentData = contentData.Skip(0x310).ToArray(); // Keep remaining data
+                        } while (contentData.Length > 0 && contentData.Length % 0x310 == 0);
+
+                        if (contentData.Length > 0) { Log($"Data remaining: {contentData.Length}"); }
+                        Log($"Found WCs: {count}.");
                     }
-                    else if (boss.Name.ToUpper().Contains("CUP") && content_data.Length == 0x4C0) // CUP Regulation
+                    else if (boss.Name.ToUpper().Contains("CUP") && contentData.Length == 0x4C0) // CUP Regulation
                     {
                         Log($"{boss.FileName} is a CUP!");
                         var cup_dir = Path.Combine("cups", game.Name);
                         CreateDirectoryIfNull(cup_dir);
-                        var reg_arc = new RegulationArchive(content_data, boss.FileName);
+                        var reg_arc = new RegulationArchive(contentData, boss.FileName);
                         Log($"Extracting/Saving {boss.FileName}...");
                         reg_arc.Save(cup_dir);
                     }
@@ -236,12 +250,55 @@ namespace MysteryGiftTool
                         Log($"{boss.FileName} is a regulation!");
                         var reg_dir = Path.Combine("regulations", game.Name);
                         CreateDirectoryIfNull(reg_dir);
-                        var reg_arc = new RegulationArchive(content_data, boss.FileName);
+                        var reg_arc = new RegulationArchive(contentData, boss.FileName);
                         Log($"Extracting/Saving {boss.FileName}...");
                         reg_arc.Save(reg_dir);
                     }
+                    else
+                    {
+                        Log($"{boss.FileName} {contentData.Length} unknown file format");
+                    }
                 }
             }
+        }
+
+        private static string GetWonderCardDescription(MysteryGift gift)
+        {
+            if (gift.Empty)
+                return "Empty Slot. No data!";
+
+            string s = gift.CardHeader + Environment.NewLine;
+            if (gift.IsItem)
+            {
+                s += "Item: " + GameInfo.Strings.itemlist[gift.ItemID] + Environment.NewLine + "Quantity: " + gift.Quantity + Environment.NewLine;
+            }
+            else if (gift.IsPokémon)
+            {
+                var pk = gift.ConvertToPKM(new SAV7());
+
+                try
+                {
+                    s += $"{GameInfo.Strings.specieslist[pk.Species]} @ {GameInfo.Strings.itemlist[pk.HeldItem]}  --- ";
+                    s += (pk.IsEgg ? GameInfo.Strings.eggname : $"{pk.OT_Name} - {pk.TID:00000}/{pk.SID:00000}") + Environment.NewLine;
+                    s += $"{GameInfo.Strings.movelist[pk.Move1]} / {GameInfo.Strings.movelist[pk.Move2]} / {GameInfo.Strings.movelist[pk.Move3]} / {GameInfo.Strings.movelist[pk.Move4]}" + Environment.NewLine;
+                    if (gift is WC7)
+                    {
+                        var addItem = ((WC7)gift).AdditionalItem;
+                        if (addItem != 0)
+                            s += $"+ {GameInfo.Strings.itemlist[addItem]}" + Environment.NewLine;
+                    }
+                }
+                catch { s += "Unable to create gift description." + Environment.NewLine; }
+            }
+            else { s += "Unknown Wonder Card Type!" + Environment.NewLine; }
+            if (gift is WC7)
+            {
+                var wc7 = (WC7)gift;
+                s += $"Repeatable: {wc7.GiftRepeatable}" + Environment.NewLine;
+                s += $"Collected: {wc7.GiftUsed}" + Environment.NewLine;
+                s += $"Once Per Day: {wc7.GiftOncePerDay}" + Environment.NewLine;
+            }
+            return s;
         }
     }
 }

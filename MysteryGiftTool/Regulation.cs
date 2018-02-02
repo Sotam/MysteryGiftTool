@@ -84,7 +84,7 @@ namespace MysteryGiftTool
         public override string ToString()
         {
             if (GameInfo.Strings == null)
-                GameInfo.Strings = GameInfo.getStrings("en");
+                GameInfo.Strings = GameInfo.GetStrings("en");
             var sb = new StringBuilder();
             sb.AppendLine("Regulation: ");
             sb.AppendLine(Title);

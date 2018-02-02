@@ -5,6 +5,9 @@ using System.Text;
 
 namespace PKHeX.Core
 {
+    /// <summary>
+    /// Generation 4 <see cref="SaveFile"/> object for Pokémon Battle Revolution saves.
+    /// </summary>
     public sealed class SAV4BR : SaveFile
     {
         public override string BAKName => $"{FileName} [{Version} #{SaveCount:0000}].bak";
@@ -14,11 +17,11 @@ namespace PKHeX.Core
         private const int SAVE_COUNT = 4;
         public SAV4BR(byte[] data = null)
         {
-            Data = data == null ? new byte[SaveUtil.SIZE_G4BR] : (byte[])data.Clone();
+            Data = data ?? new byte[SaveUtil.SIZE_G4BR];
             BAK = (byte[])Data.Clone();
-            Exportable = !Data.SequenceEqual(new byte[Data.Length]);
+            Exportable = !Data.All(z => z == 0);
 
-            if (SaveUtil.getIsG4BRSAV(Data) != GameVersion.BATREV)
+            if (SaveUtil.GetIsG4BRSAV(Data) != GameVersion.BATREV)
                 return;
 
             Data = DecryptPBRSaveData(data);
@@ -44,19 +47,20 @@ namespace PKHeX.Core
                 }
             }
 
-            CurrentSlot = SaveSlots.First();
+            CurrentSlot = SaveSlots[0];
 
             Personal = PersonalTable.DP;
             HeldItems = Legal.HeldItems_DP;
 
             if (!Exportable)
-                resetBoxes();
+                ClearBoxes();
         }
 
         private readonly uint SaveCount;
-        public override byte[] Write(bool DSV)
+
+        protected override byte[] Write(bool DSV)
         {
-            setChecksums();
+            SetChecksums();
             return EncryptPBRSaveData(Data);
         }
 
@@ -67,26 +71,26 @@ namespace PKHeX.Core
         public readonly string[] SaveNames;
         public int CurrentSlot;
         protected override int Box { // 4 save slots, data reading depends on current slot
-            get { return 0x978 + 0x6FF00*CurrentSlot; }
+            get => 0x978 + 0x6FF00 * CurrentSlot;
             set { }
         }
 
         public override int SIZE_STORED => PKX.SIZE_4STORED;
-        public override int SIZE_PARTY => PKX.SIZE_4PARTY - 0x10; // PBR has a party
+        protected override int SIZE_PARTY => PKX.SIZE_4PARTY - 0x10; // PBR has a party
         public override PKM BlankPKM => new BK4();
         public override Type PKMType => typeof(BK4);
 
         public override int MaxMoveID => 467;
         public override int MaxSpeciesID => Legal.MaxSpeciesID_4;
-        public override int MaxAbilityID => 123;
-        public override int MaxItemID => 536;
-        public override int MaxBallID => 0x18;
-        public override int MaxGameID => 15;
+        public override int MaxAbilityID => Legal.MaxAbilityID_4;
+        public override int MaxItemID => Legal.MaxItemID_4_HGSS;
+        public override int MaxBallID => Legal.MaxBallID_4;
+        public override int MaxGameID => Legal.MaxGameID_4;
 
         public override int MaxEV => 255;
         public override int Generation => 4;
         protected override int GiftCountMax => 1;
-        public override int OTLength => 8;
+        public override int OTLength => 7;
         public override int NickLength => 10;
         public override int MaxMoney => 999999;
 
@@ -94,54 +98,53 @@ namespace PKHeX.Core
         public override bool HasParty => false;
 
         // Checksums
-        protected override void setChecksums()
+        protected override void SetChecksums()
         {
             SetChecksum(Data, 0, 0x100, 8);
             SetChecksum(Data, 0, 0x1C0000, 0x1BFF80);
             SetChecksum(Data, 0x1C0000, 0x100, 0x1C0008);
             SetChecksum(Data, 0x1C0000, 0x1C0000, 0x1BFF80 + 0x1C0000);
         }
-        public override bool ChecksumsValid
-        {
-            get {
-                bool valid = VerifyChecksum(Data, 0, 0x1C0000, 0x1BFF80);
-                valid &= VerifyChecksum(Data, 0, 0x100, 8);
-                valid &= VerifyChecksum(Data, 0x1C0000, 0x1C0000, 0x1BFF80 + 0x1C0000);
-                valid &= VerifyChecksum(Data, 0x1C0000, 0x100, 0x1C0008);
-                return valid;
-            }
-        }
+        public override bool ChecksumsValid => IsChecksumsValid(Data);
         public override string ChecksumInfo => $"Checksums valid: {ChecksumsValid}.";
 
+        public static bool IsChecksumsValid(byte[] sav)
+        {
+            return VerifyChecksum(sav, 0x000000, 0x1C0000, 0x1BFF80)
+                && VerifyChecksum(sav, 0x000000, 0x000100, 0x000008)
+                && VerifyChecksum(sav, 0x1C0000, 0x1C0000, 0x1BFF80 + 0x1C0000)
+                && VerifyChecksum(sav, 0x1C0000, 0x000100, 0x1C0008);
+        }
+
         // Trainer Info
-        public override GameVersion Version { get { return GameVersion.BATREV; } protected set { } }
+        public override GameVersion Version { get => GameVersion.BATREV; protected set { } }
 
         // Storage
-        public override int getPartyOffset(int slot) // TODO
+        public override int GetPartyOffset(int slot) // TODO
         {
             return -1;
         }
-        public override int getBoxOffset(int box)
+        public override int GetBoxOffset(int box)
         {
             return Box + SIZE_STORED * box * 30;
         }
 
         // Save file does not have Box Name / Wallpaper info
-        public override string getBoxName(int box) { return $"BOX {box + 1}"; }
-        public override void setBoxName(int box, string value) { }
+        public override string GetBoxName(int box) { return $"BOX {box + 1}"; }
+        public override void SetBoxName(int box, string value) { }
 
-        public override PKM getPKM(byte[] data)
+        public override PKM GetPKM(byte[] data)
         {
             byte[] pkm = data.Take(SIZE_STORED).ToArray();
             PKM bk = new BK4(pkm);
             return bk;
         }
-        public override byte[] decryptPKM(byte[] data)
+        public override byte[] DecryptPKM(byte[] data)
         {
             return data;
         }
 
-        protected override void setDex(PKM pkm) { }
+        protected override void SetDex(PKM pkm) { }
 
         public static byte[] DecryptPBRSaveData(byte[] input)
         {
@@ -160,7 +163,8 @@ namespace PKHeX.Core
                     {
                         ushort val = BigEndian.ToUInt16(input, ofs + i*2);
                         val -= keys[i];
-                        BigEndian.GetBytes(val).CopyTo(output, ofs + i*2);
+                        output[ofs + i * 2] = (byte)(val >> 8);
+                        output[ofs + i * 2 + 1] = (byte)val;
                     }
                     keys = SaveUtil.AdvanceGCKeys(keys);
                 }
@@ -185,7 +189,8 @@ namespace PKHeX.Core
                     {
                         ushort val = BigEndian.ToUInt16(input, ofs + i * 2);
                         val += keys[i];
-                        BigEndian.GetBytes(val).CopyTo(output, ofs + i * 2);
+                        output[ofs + i * 2] = (byte)(val >> 8);
+                        output[ofs + i * 2 + 1] = (byte)val;
                     }
                     keys = SaveUtil.AdvanceGCKeys(keys);
                 }
@@ -221,7 +226,7 @@ namespace PKHeX.Core
             return checksums.SequenceEqual(storedChecksums);
         }
 
-        public static void SetChecksum(byte[] input, int offset, int len, int checksum_offset)
+        private static void SetChecksum(byte[] input, int offset, int len, int checksum_offset)
         {
             uint[] storedChecksums = new uint[16];
             for (int i = 0; i < storedChecksums.Length; i++)
@@ -245,6 +250,14 @@ namespace PKHeX.Core
             {
                 BigEndian.GetBytes(checksums[i]).CopyTo(input, checksum_offset + i * 4);
             }
+        }
+
+        public override string GetString(int Offset, int Count) => StringConverter.GetBEString4(Data, Offset, Count);
+        public override byte[] SetString(string value, int maxLength, int PadToSize = 0, ushort PadWith = 0)
+        {
+            if (PadToSize == 0)
+                PadToSize = maxLength + 1;
+            return StringConverter.SetBEString4(value, maxLength, PadToSize, PadWith);
         }
     }
 }

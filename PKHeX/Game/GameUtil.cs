@@ -1,21 +1,33 @@
 ﻿namespace PKHeX.Core
 {
+    /// <summary>
+    /// Utility class for <see cref="GameVersion"/> logic.
+    /// </summary>
     public static class GameUtil
     {
         /// <summary>Determines the Version Grouping of an input Version ID</summary>
         /// <param name="Version">Version of which to determine the group</param>
         /// <returns>Version Group Identifier or Invalid if type cannot be determined.</returns>
-        public static GameVersion getMetLocationVersionGroup(GameVersion Version)
+        public static GameVersion GetMetLocationVersionGroup(GameVersion Version)
         {
             switch (Version)
             {
                 case GameVersion.CXD:
                     return GameVersion.CXD;
 
+                case GameVersion.GO:
+                    return GameVersion.GO;
+
                 case GameVersion.RBY:
+                case GameVersion.RD:
+                case GameVersion.BU:
+                case GameVersion.YW:
+                case GameVersion.GN:
                     return GameVersion.RBY;
 
                 case GameVersion.GS:
+                case GameVersion.GD:
+                case GameVersion.SV:
                 case GameVersion.C:
                     return GameVersion.GSC;
 
@@ -61,8 +73,65 @@
                 case GameVersion.MN:
                     return GameVersion.SM;
 
+                case GameVersion.US:
+                case GameVersion.UM:
+                    return GameVersion.USUM;
+
                 default:
                     return GameVersion.Invalid;
+            }
+        }
+
+        /// <summary>
+        /// Gets a Version ID from the end of that Generation
+        /// </summary>
+        /// <param name="generation">Generation ID</param>
+        /// <returns>Version ID from requested generation. If none, return Unknown.</returns>
+        public static GameVersion GetVersion(int generation)
+        {
+            switch (generation)
+            {
+                case 1: return GameVersion.RBY;
+                case 2: return GameVersion.C;
+                case 3: return GameVersion.E;
+                case 4: return GameVersion.SS;
+                case 5: return GameVersion.W2;
+                case 6: return GameVersion.AS;
+                case 7: return GameVersion.UM;
+                default:
+                    return GameVersion.Unknown;
+            }
+        }
+        public static int GetGeneration(GameVersion game)
+        {
+            game = GetMetLocationVersionGroup(game); // get group
+            switch (game)
+            {
+                default: return -1;
+
+                case GameVersion.RBY: return 1;
+                case GameVersion.GSC: return 2;
+
+                case GameVersion.CXD:
+                case GameVersion.RS: case GameVersion.E:
+                case GameVersion.FR: case GameVersion.LG:
+                    return 3;
+
+                case GameVersion.DP: case GameVersion.Pt:
+                case GameVersion.HGSS:
+                    return 4;
+
+                case GameVersion.BW:
+                case GameVersion.B2W2:
+                    return 5;
+
+                case GameVersion.XY:
+                case GameVersion.ORAS:
+                    return 6;
+
+                case GameVersion.SM:
+                case GameVersion.USUM:
+                    return 7;
             }
         }
     }

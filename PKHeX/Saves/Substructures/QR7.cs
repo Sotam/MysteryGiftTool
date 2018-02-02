@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Drawing;
 using System.Linq;
-
-using QRCoder;
 
 namespace PKHeX.Core
 {
@@ -17,11 +14,10 @@ namespace PKHeX.Core
     // u8  dex_data[0x60];
     // u16 crc16
     // sizeof(QR7) == 0x1A2
-
-
+    
     public static class QR7
     {
-        private static bool hasGenderDifferences(int species)
+        private static bool HasGenderDifferences(int species)
         {
             var gendered = new[]
             {
@@ -39,8 +35,8 @@ namespace PKHeX.Core
             BitConverter.GetBytes((ushort)species).CopyTo(basedata, 0x28);
             basedata[0x2A] = (byte)formnum;
             basedata[0x2C] = (byte)(shiny ? 1 : 0);
-            var forme_index = PersonalTable.SM[species].FormeIndex(species, formnum);
-            var raw_gender = PersonalTable.SM[forme_index].Gender;
+            var forme_index = PersonalTable.USUM[species].FormeIndex(species, formnum);
+            var raw_gender = PersonalTable.USUM[forme_index].Gender;
             switch (raw_gender)
             {
                 case 0:
@@ -56,13 +52,13 @@ namespace PKHeX.Core
                     basedata[0x2B] = 2;
                     break;
                 default:
-                    basedata[0x2D] = (byte)(hasGenderDifferences(species) ? 0 : 1);
+                    basedata[0x2D] = (byte)(HasGenderDifferences(species) ? 0 : 1);
                     basedata[0x2B] = (byte)gender;
                     break;
             }
             return basedata;
         }
-        private static byte[] GenerateQRData(PK7 pk7, int box = 0, int slot = 0, int num_copies = 1)
+        public static byte[] GenerateQRData(PK7 pk7, int box = 0, int slot = 0, int num_copies = 1)
         {
             if (box > 31)
                 box = 31;
@@ -84,25 +80,8 @@ namespace PKHeX.Core
 
             pk7.EncryptedPartyData.CopyTo(data, 0x30); // Copy in pokemon data
             GetRawQR(pk7.Species, pk7.AltForm, pk7.IsShiny, pk7.Gender).CopyTo(data, 0x140);
-            BitConverter.GetBytes((ushort) SaveUtil.check16(data.Take(0x1A0).ToArray(), 0)).CopyTo(data, 0x1A0);
+            BitConverter.GetBytes(SaveUtil.CRC16(data, 0, 0x1A0)).CopyTo(data, 0x1A0);
             return data;
-        }
-
-        public static Bitmap GenerateQRCode7(PK7 pk7, int box = 0, int slot = 0, int num_copies = 1)
-        {
-            byte[] data = GenerateQRData(pk7, box, slot, num_copies);
-            using (var generator = new QRCodeGenerator())
-            using (var qr_data = generator.CreateQRCode(data))
-            using (var qr_code = new QRCode(qr_data))
-                return qr_code.GetGraphic(4);
-        }
-
-        public static Bitmap GenerateQRCode(byte[] data, int ppm = 4)
-        {
-            using (var generator = new QRCodeGenerator())
-            using (var qr_data = generator.CreateQRCode(data))
-            using (var qr_code = new QRCode(qr_data))
-                return qr_code.GetGraphic(ppm);
         }
     }
 }

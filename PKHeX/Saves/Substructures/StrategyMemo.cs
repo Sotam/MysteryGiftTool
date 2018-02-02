@@ -10,6 +10,7 @@ namespace PKHeX.Core
         private const int SIZE_ENTRY = 12;
         private readonly List<StrategyMemoEntry> Entries = new List<StrategyMemoEntry>();
         private StrategyMemoEntry this[int Species] => Entries.FirstOrDefault(e => e.Species == Species);
+        private readonly byte[] _unk;
 
         public StrategyMemo(byte[] input, int offset, bool xd)
         {
@@ -17,6 +18,7 @@ namespace PKHeX.Core
             int count = BigEndian.ToInt16(input, offset);
             if (count > 500)
                 count = 500;
+            _unk = input.Skip(offset + 2).Take(2).ToArray();
             for (int i = 0; i < count; i++)
             {
                 byte[] data = new byte[SIZE_ENTRY];
@@ -24,8 +26,8 @@ namespace PKHeX.Core
                 Entries.Add(new StrategyMemoEntry(XD, data));
             }
         }
-        public byte[] FinalData => BigEndian.GetBytes(Entries.Count) // count followed by populated entries
-            .Concat(Entries.Where(entry => entry.Species != 0).SelectMany(entry => entry.Data)).ToArray();
+        public byte[] FinalData => BigEndian.GetBytes((short)Entries.Count).Concat(_unk) // count followed by populated entries
+            .Concat(Entries.SelectMany(entry => entry.Data)).ToArray();
 
         public StrategyMemoEntry GetEntry(int Species)
         {
@@ -33,7 +35,7 @@ namespace PKHeX.Core
         }
         public void SetEntry(StrategyMemoEntry entry)
         {
-            int index = Array.FindIndex(Entries.ToArray(), ent => ent.Species == entry.Species);
+            int index = Entries.FindIndex(ent => ent.Species == entry.Species);
             if (index > 0)
                 Entries[index] = entry;
             else
@@ -54,21 +56,21 @@ namespace PKHeX.Core
                 get
                 {
                     int val = BigEndian.ToUInt16(Data, 0) & 0x1FF;
-                    return PKX.getG4Species(val);
+                    return SpeciesConverter.GetG4Species(val);
                 }
                 set
                 {
-                    value = PKX.getG3Species(value);
+                    value = SpeciesConverter.GetG3Species(value);
                     int cval = BigEndian.ToUInt16(Data, 0);
                     cval &= 0xE00; value &= 0x1FF; cval |= value;
                     BigEndian.GetBytes((ushort)cval).CopyTo(Data, 0);
                 }
             }
-            private bool Flag0 { get { return Data[0] >> 6 == 1; } set { Data[0] &= 0xBF; if (value) Data[0] |= 0x40; } } // Unused
-            private bool Flag1 { get { return Data[0] >> 7 == 1; } set { Data[0] &= 0x7F; if (value) Data[0] |= 0x80; } } // Complete Entry
-            public int SID { get { return BigEndian.ToUInt16(Data, 4); } set { BigEndian.GetBytes((ushort)value).CopyTo(Data, 4); } }
-            public int TID { get { return BigEndian.ToUInt16(Data, 6); } set { BigEndian.GetBytes((ushort)value).CopyTo(Data, 6); } }
-            public uint PID { get { return BigEndian.ToUInt32(Data, 8); } set { BigEndian.GetBytes(value).CopyTo(Data, 8); } }
+            private bool Flag0 { get => Data[0] >> 6 == 1; set { Data[0] &= 0xBF; if (value) Data[0] |= 0x40; } } // Unused
+            private bool Flag1 { get => Data[0] >> 7 == 1; set { Data[0] &= 0x7F; if (value) Data[0] |= 0x80; } } // Complete Entry
+            public int SID { get => BigEndian.ToUInt16(Data, 4); set => BigEndian.GetBytes((ushort)value).CopyTo(Data, 4); }
+            public int TID { get => BigEndian.ToUInt16(Data, 6); set => BigEndian.GetBytes((ushort)value).CopyTo(Data, 6); }
+            public uint PID { get => BigEndian.ToUInt32(Data, 8); set => BigEndian.GetBytes(value).CopyTo(Data, 8); }
 
             public bool Seen
             {

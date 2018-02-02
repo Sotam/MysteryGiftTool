@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace PKHeX.Core
 {
+    /// <summary>
+    /// Generation 1 <see cref="SaveFile"/> object.
+    /// </summary>
     public sealed class SAV1 : SaveFile
     {
         public override string BAKName => $"{FileName} [{OT} ({Version}) - {PlayTimeString}].bak";
@@ -14,22 +17,28 @@ namespace PKHeX.Core
             return 1 <= gen && gen <= 2;
         }).ToArray();
 
-        public SAV1(byte[] data = null)
+        public SAV1(byte[] data = null, GameVersion versionOverride = GameVersion.Any)
         {
-            Data = data == null ? new byte[SaveUtil.SIZE_G1RAW] : (byte[])data.Clone();
+            Data = data ?? new byte[SaveUtil.SIZE_G1RAW];
             BAK = (byte[])Data.Clone();
-            Exportable = !Data.SequenceEqual(new byte[Data.Length]);
+            Exportable = !Data.All(z => z == 0);
 
-            Version = data == null ? GameVersion.RBY : SaveUtil.getIsG1SAV(Data);
+            if (data == null)
+                Version = GameVersion.RBY;
+            else if (versionOverride != GameVersion.Any)
+                Version = versionOverride;
+            else Version = SaveUtil.GetIsG1SAV(Data);
             if (Version == GameVersion.Invalid)
                 return;
+            if (Starter != 0)
+                Version = Yellow ? GameVersion.YW : GameVersion.RB;
 
             Box = Data.Length;
             Array.Resize(ref Data, Data.Length + SIZE_RESERVED);
-            Party = getPartyOffset(0);
+            Party = GetPartyOffset(0);
 
-            Japanese = SaveUtil.getIsG1SAVJ(data);
-            Personal = PersonalTable.RBY;
+            Japanese = SaveUtil.GetIsG1SAVJ(Data);
+            Personal = PersonalTable.Y;
 
             // Stash boxes after the save file's end.
             byte[] TempBox = new byte[SIZE_STOREDBOX];
@@ -79,12 +88,12 @@ namespace PKHeX.Core
                 if (i < partyList.Count)
                 {
                     byte[] pkDat = new PokemonList1(partyList[i]).GetBytes();
-                    pkDat.CopyTo(Data, getPartyOffset(i));
+                    pkDat.CopyTo(Data, GetPartyOffset(i));
                 }
                 else
                 {
                     byte[] pkDat = new byte[PokemonList1.GetDataLength(PokemonList1.CapacityType.Single, Japanese)];
-                    pkDat.CopyTo(Data, getPartyOffset(i));
+                    pkDat.CopyTo(Data, GetPartyOffset(i));
                 }
             }
 
@@ -96,18 +105,27 @@ namespace PKHeX.Core
             Array.Copy(rawDC, 1 + StringLength, TempDaycare, 2 + 1 + PKX.SIZE_1PARTY, StringLength);
             Array.Copy(rawDC, 1 + 2 * StringLength, TempDaycare, 2 + 1, PKX.SIZE_1STORED);
             PokemonList1 daycareList = new PokemonList1(TempDaycare, PokemonList1.CapacityType.Single, Japanese);
-            daycareList.GetBytes().CopyTo(Data, getPartyOffset(7));
-            Daycare = getPartyOffset(7); 
+            daycareList.GetBytes().CopyTo(Data, GetPartyOffset(7));
+            Daycare = GetPartyOffset(7);
+
+            EventFlag = Japanese ? 0x29E9 : 0x29F3;
+            ObjectSpawnFlags = Japanese ? 0x2848 : 0x2852; // 2 bytes after Coin
 
             // Enable Pokedex editing
             PokeDex = 0;
 
             if (!Exportable)
-                resetBoxes();
+                ClearBoxes();
         }
 
+        // Event Flags
+        protected override int EventFlagMax => EventFlag > 0 ? 0xA00 : int.MinValue; // 320 * 8
+        protected override int EventConstMax => 0;
+        private readonly int ObjectSpawnFlags;
+
         private const int SIZE_RESERVED = 0x8000; // unpacked box data
-        public override byte[] Write(bool DSV)
+
+        protected override byte[] Write(bool DSV)
         {
             for (int i = 0; i < BoxCount; i++)
             {
@@ -115,7 +133,7 @@ namespace PKHeX.Core
                 int slot = 0;
                 for (int j = 0; j < boxPL.Pokemon.Length; j++)
                 {
-                    PK1 boxPK = (PK1) getPKM(getData(getBoxOffset(i) + j*SIZE_STORED, SIZE_STORED));
+                    PK1 boxPK = (PK1) GetPKM(GetData(GetBoxOffset(i) + j*SIZE_STORED, SIZE_STORED));
                     if (boxPK.Species > 0)
                         boxPL[slot++] = boxPK;
                 }
@@ -131,14 +149,14 @@ namespace PKHeX.Core
             int pSlot = 0;
             for (int i = 0; i < 6; i++)
             {
-                PK1 partyPK = (PK1)getPKM(getData(getPartyOffset(i), SIZE_STORED));
+                PK1 partyPK = (PK1)GetPKM(GetData(GetPartyOffset(i), SIZE_STORED));
                 if (partyPK.Species > 0)
                     partyPL[pSlot++] = partyPK;
             }
             partyPL.GetBytes().CopyTo(Data, Japanese ? 0x2ED5 : 0x2F2C);
 
             // Daycare is read-only, but in case it ever becomes editable, copy it back in.
-            byte[] rawDC = getData(getDaycareSlotOffset(loc: 0, slot: 0), SIZE_STORED);
+            byte[] rawDC = GetData(GetDaycareSlotOffset(loc: 0, slot: 0), SIZE_STORED);
             byte[] dc = new byte[1 + 2*StringLength + PKX.SIZE_1STORED];
             dc[0] = rawDC[0];
             Array.Copy(rawDC, 2 + 1 + PKX.SIZE_1PARTY + StringLength, dc, 1, StringLength);
@@ -146,7 +164,7 @@ namespace PKHeX.Core
             Array.Copy(rawDC, 2 + 1, dc, 1 + 2*StringLength, PKX.SIZE_1STORED);
             dc.CopyTo(Data, Japanese ? 0x2CA7 : 0x2CF4);
 
-            setChecksums();
+            SetChecksums();
             byte[] outData = new byte[Data.Length - SIZE_RESERVED];
             Array.Copy(Data, outData, outData.Length);
             return outData;
@@ -157,20 +175,21 @@ namespace PKHeX.Core
         public override SaveFile Clone() { return new SAV1(Write(DSV: false)); }
 
         public override int SIZE_STORED => Japanese ? PKX.SIZE_1JLIST : PKX.SIZE_1ULIST;
-        public override int SIZE_PARTY => Japanese ? PKX.SIZE_1JLIST : PKX.SIZE_1ULIST;
+        protected override int SIZE_PARTY => Japanese ? PKX.SIZE_1JLIST : PKX.SIZE_1ULIST;
         private int SIZE_BOX => BoxSlotCount*SIZE_STORED;
         private int SIZE_STOREDBOX => PokemonList1.GetDataLength(Japanese ? PokemonList1.CapacityType.StoredJP : PokemonList1.CapacityType.Stored, Japanese);
 
         public override PKM BlankPKM => new PK1(null, null, Japanese);
         public override Type PKMType => typeof(PK1);
 
-        public override int MaxMoveID => 165;
+        public override int MaxMoveID => Legal.MaxMoveID_1;
         public override int MaxSpeciesID => Legal.MaxSpeciesID_1;
-        public override int MaxAbilityID => 0;
-        public override int MaxItemID => 255;
-        public override int MaxBallID => 0;
-        public override int MaxGameID => 99; // What do I set this to...?
+        public override int MaxAbilityID => Legal.MaxAbilityID_1;
+        public override int MaxItemID => Legal.MaxItemID_1;
+        public override int MaxBallID => 0; // unused
+        public override int MaxGameID => 99; // unused
         public override int MaxMoney => 999999;
+        public override int MaxCoins => 9999;
 
         public override int BoxCount => Japanese ? 8 : 12;
         public override int MaxEV => 65535;
@@ -185,7 +204,7 @@ namespace PKHeX.Core
         private int StringLength => Japanese ? PK1.STRLEN_J : PK1.STRLEN_U;
 
         // Checksums
-        protected override void setChecksums()
+        protected override void SetChecksums()
         {
             int CHECKSUM_OFS = Japanese ? 0x3594 : 0x3523;
             Data[CHECKSUM_OFS] = 0;
@@ -206,7 +225,7 @@ namespace PKHeX.Core
             {
                 int CHECKSUM_OFS = Japanese ? 0x3594 : 0x3523;
                 byte temp = Data[CHECKSUM_OFS]; // cache current chk
-                setChecksums(); // chksum is recalculated (after being set to 0 to perform check)
+                SetChecksums(); // chksum is recalculated (after being set to 0 to perform check)
                 byte chk = Data[CHECKSUM_OFS]; // correct checksum
                 Data[CHECKSUM_OFS] = temp; // restore old chk
                 return temp == chk;
@@ -219,75 +238,71 @@ namespace PKHeX.Core
 
         public override string OT
         {
-            get { return PKX.getG1Str(Data.Skip(0x2598).Take(StringLength).ToArray(), Japanese); }
-            set
-            {
-                byte[] strdata = PKX.setG1Str(value, Japanese);
-                if (strdata.Length > StringLength)
-                    throw new ArgumentException("OT Name too long for given save file.");
-                strdata.CopyTo(Data, 0x2598);
-            }
+            get => GetString(0x2598, OTLength);
+            set => SetString(value, OTLength).CopyTo(Data, 0x2598);
         }
         public override int Gender
         {
-            get { return 0; }
+            get => 0;
             set { }
         }
         public override ushort TID
         {
-            get { return BigEndian.ToUInt16(Data, Japanese ? 0x25FB : 0x2605); }
-            set { BigEndian.GetBytes(value).CopyTo(Data, Japanese ? 0x25FB : 0x2605); }
+            get => BigEndian.ToUInt16(Data, Japanese ? 0x25FB : 0x2605);
+            set => BigEndian.GetBytes(value).CopyTo(Data, Japanese ? 0x25FB : 0x2605);
         }
         public override ushort SID
         {
-            get { return 0; }
+            get => 0;
             set { }
         }
 
+        public bool Yellow => Starter == 0x54; // Pikachu
+        public int Starter => Data[Japanese ? 0x29B9 : 0x29C3];
         public byte PikaFriendship
         {
-            get { return Data[Japanese ? 0x2712 : 0x271C]; }
-            set { Data[Japanese ? 0x2712 : 0x271C] = value; }
+            get => Data[Japanese ? 0x2712 : 0x271C];
+            set => Data[Japanese ? 0x2712 : 0x271C] = value;
         }
         public override int PlayedHours
         {
-            get { return BitConverter.ToUInt16(Data, Japanese ? 0x2CA0 : 0x2CED); }
-            set { BitConverter.GetBytes((ushort)value).CopyTo(Data, Japanese ? 0x2CA0 : 0x2CED); }
+            get => BitConverter.ToUInt16(Data, Japanese ? 0x2CA0 : 0x2CED);
+            set => BitConverter.GetBytes((ushort)value).CopyTo(Data, Japanese ? 0x2CA0 : 0x2CED);
         }
         public override int PlayedMinutes
         {
-            get { return Data[Japanese ? 0x2CA2 : 0x2CEF]; }
-            set { Data[Japanese ? 0x2CA2 : 0x2CEF] = (byte)value; }
+            get => Data[Japanese ? 0x2CA2 : 0x2CEF];
+            set => Data[Japanese ? 0x2CA2 : 0x2CEF] = (byte)value;
         }
         public override int PlayedSeconds
         {
-            get { return Data[Japanese ? 0x2CA3 : 0x2CF0]; }
-            set { Data[Japanese ? 0x2CA3 : 0x2CF0] = (byte)value; }
+            get => Data[Japanese ? 0x2CA3 : 0x2CF0];
+            set => Data[Japanese ? 0x2CA3 : 0x2CF0] = (byte)value;
         }
 
         public int Badges
         {
-            get { return Data[Japanese ? 0x25F8 : 0x2602]; }
+            get => Data[Japanese ? 0x25F8 : 0x2602];
             set { if (value < 0) return; Data[Japanese ? 0x25F8 : 0x2602] = (byte)value; }
         }
         private byte Options
         {
-            get { return Data[Japanese ? 0x25F7 : 0x2601]; }
-            set { Data[Japanese ? 0x25F7 : 0x2601] = value; }
+            get => Data[Japanese ? 0x25F7 : 0x2601];
+            set => Data[Japanese ? 0x25F7 : 0x2601] = value;
         }
         public bool BattleEffects
         {
-            get { return (Options & 0x80) == 0; }
-            set { Options = (byte)((Options & 0x7F) | (value ? 0 : 0x80)); }
+            get => (Options & 0x80) == 0;
+            set => Options = (byte)((Options & 0x7F) | (value ? 0 : 0x80));
         }
         public bool BattleStyleSwitch
         {
-            get { return (Options & 0x40) == 0; }
-            set { Options = (byte)((Options & 0xBF) | (value ? 0 : 0x40)); }
+            get => (Options & 0x40) == 0;
+            set => Options = (byte)((Options & 0xBF) | (value ? 0 : 0x40));
         }
         public int Sound
         {
-            get { return (Options & 0x30) >> 4; }
+            get => (Options & 0x30) >> 4;
             set
             {
                 var new_sound = value;
@@ -300,7 +315,7 @@ namespace PKHeX.Core
         }
         public int TextSpeed
         {
-            get { return Options & 0x7; }
+            get => Options & 0x7;
             set
             {
                 var new_speed = value;
@@ -313,21 +328,20 @@ namespace PKHeX.Core
         }
         public override uint Money
         {
-            get { return uint.Parse((BigEndian.ToUInt32(Data, Japanese ? 0x25EE : 0x25F3) >> 8).ToString("X6")); }
+            get => (uint)BigEndian.BCDToInt32(Data, Japanese ? 0x25EE : 0x25F3, 3);
             set
             {
-                BigEndian.GetBytes(Convert.ToUInt32(value.ToString("000000"), 16)).Skip(1).ToArray().CopyTo(Data, Japanese ? 0x25EE : 0x25F3);
+                value = (uint)Math.Min(value, MaxMoney);
+                BigEndian.Int32ToBCD((int)value, 3).CopyTo(Data, Japanese ? 0x25EE : 0x25F3);
             }
         }
         public uint Coin
         {
-            get
-            {
-                return uint.Parse(BigEndian.ToUInt16(Data, Japanese ? 0x2846 : 0x2850).ToString("X4"));
-            }
+            get => (uint)BigEndian.BCDToInt32(Data, Japanese ? 0x2846 : 0x2850, 2);
             set
             {
-                BigEndian.GetBytes(Convert.ToUInt16(value.ToString("0000"), 16)).ToArray().CopyTo(Data, Japanese ? 0x2846 : 0x2850);
+                value = (ushort)Math.Min(value, MaxCoins);
+                BigEndian.Int32ToBCD((int)value, 2).CopyTo(Data, Japanese ? 0x2846 : 0x2850);
             }
         }
 
@@ -344,7 +358,7 @@ namespace PKHeX.Core
                 };
                 foreach (var p in pouch)
                 {
-                    p.getPouchG1(ref Data);
+                    p.GetPouchG1(Data);
                 }
                 return pouch;
             }
@@ -360,28 +374,28 @@ namespace PKHeX.Core
                         p.Items[i] = p.Items[ofs++];
                     }
                     while (ofs < p.Items.Length)
-                        p.Items[ofs++] = new InventoryItem { Count = 0, Index = 0 };
-                    p.setPouchG1(ref Data);
+                        p.Items[ofs++] = new InventoryItem();
+                    p.SetPouchG1(Data);
                 }
             }
         }
-        public override int getDaycareSlotOffset(int loc, int slot)
+        public override int GetDaycareSlotOffset(int loc, int slot)
         {
             return Daycare;
         }
-        public override uint? getDaycareEXP(int loc, int slot)
+        public override uint? GetDaycareEXP(int loc, int slot)
         {
             return null;
         }
-        public override bool? getDaycareOccupied(int loc, int slot)
+        public override bool? IsDaycareOccupied(int loc, int slot)
         {
             return null;
         }
-        public override void setDaycareEXP(int loc, int slot, uint EXP)
+        public override void SetDaycareEXP(int loc, int slot, uint EXP)
         {
 
         }
-        public override void setDaycareOccupied(int loc, int slot, bool occupied)
+        public override void SetDaycareOccupied(int loc, int slot, bool occupied)
         {
 
         }
@@ -389,109 +403,115 @@ namespace PKHeX.Core
         // Storage
         public override int PartyCount
         {
-            get { return Data[Japanese ? 0x2ED5 : 0x2F2C]; }
-            protected set
-            {
-                Data[Japanese ? 0x2ED5 : 0x2F2C] = (byte)value; 
-            }
+            get => Data[Japanese ? 0x2ED5 : 0x2F2C];
+            protected set => Data[Japanese ? 0x2ED5 : 0x2F2C] = (byte)value;
         }
-        public override int getBoxOffset(int box)
+        public override int GetBoxOffset(int box)
         {
             return Data.Length - SIZE_RESERVED + box * SIZE_BOX;
         }
-        public override int getPartyOffset(int slot)
+        public override int GetPartyOffset(int slot)
         {
             return Data.Length - SIZE_RESERVED + BoxCount * SIZE_BOX + slot * SIZE_STORED;
         }
         public override int CurrentBox
         {
-            get { return Data[Japanese ? 0x2842 : 0x284C] & 0x7F; }
-            set { Data[Japanese ? 0x2842 : 0x284C] = (byte)((Data[Japanese ? 0x2842 : 0x284C] & 0x80) | (value & 0x7F)); }
+            get => Data[Japanese ? 0x2842 : 0x284C] & 0x7F;
+            set => Data[Japanese ? 0x2842 : 0x284C] = (byte)((Data[Japanese ? 0x2842 : 0x284C] & 0x80) | (value & 0x7F));
         }
-        public override string getBoxName(int box)
+        public override string GetBoxName(int box)
         {
             return $"BOX {box + 1}";
         }
-        public override void setBoxName(int box, string value)
+        public override void SetBoxName(int box, string value)
         {
             // Don't allow for custom box names
         }
 
-        public override PKM getPKM(byte[] data)
+        public override PKM GetPKM(byte[] data)
         {
             if (data.Length == SIZE_STORED)
                 return new PokemonList1(data, PokemonList1.CapacityType.Single, Japanese)[0];
             return new PK1(data);
         }
-        public override byte[] decryptPKM(byte[] data)
+        public override byte[] DecryptPKM(byte[] data)
         {
             return data;
         }
 
         // Pokédex
-        public override bool getSeen(PKM pkm)
+        private int PokedexSeenOffset => Japanese ? 0x25B1 : 0x25B6;
+        private int PokedexCaughtOffset => Japanese ? 0x259E : 0x25A3;
+        protected override void SetDex(PKM pkm)
         {
-            if (pkm.Species == 0)
-                return false;
-            if (pkm.Species > MaxSpeciesID)
-                return false;
-            if (Version == GameVersion.Unknown)
-                return false;
+            int species = pkm.Species;
+            if (!CanSetDex(species))
+                return;
 
-            int bit = pkm.Species - 1;
-            int ofs = bit >> 3;
-            byte bitval = (byte)(1 << (bit & 7));
-            // Get the Seen Flag
-            return (Data[(Japanese ? 0x25B1 : 0x25B6) + ofs] & bitval) != 0;
+            SetCaught(pkm.Species, true);
+            SetSeen(pkm.Species, true);
         }
-        public override bool getCaught(PKM pkm)
+        private bool CanSetDex(int species)
         {
-            if (pkm.Species == 0)
+            if (species <= 0)
                 return false;
-            if (pkm.Species > MaxSpeciesID)
+            if (species > MaxSpeciesID)
                 return false;
             if (Version == GameVersion.Unknown)
                 return false;
-
-            int bit = pkm.Species - 1;
-            int ofs = bit >> 3;
-            byte bitval = (byte)(1 << (bit & 7));
-            // Get the Caught Flag
-            return (Data[(Japanese ? 0x259E : 0x25A3) + ofs] & bitval) != 0;
+            return true;
         }
-        public override void setSeen(PKM pkm, bool seen = true)
+        public override void SetSeen(int species, bool seen)
         {
-            if (pkm.Species == 0)
-                return;
-            if (pkm.Species > MaxSpeciesID)
-                return;
-            if (Version == GameVersion.Unknown)
-                return;
-
-            int bit = pkm.Species - 1;
+            int bit = species - 1;
             int ofs = bit >> 3;
-            byte bitval = (byte)(1 << (bit & 7));
-            // Set the Seen Flag
-            Data[(Japanese ? 0x25B1 : 0x25B6) + ofs] &= (byte)~bitval;
-            if (seen)
-                Data[(Japanese ? 0x25B1 : 0x25B6) + ofs] |= bitval;
+            SetFlag(PokedexSeenOffset + ofs, bit & 7, seen);
         }
-        public override void setCaught(PKM pkm, bool caught = true)
+        public override void SetCaught(int species, bool caught)
         {
-            if (pkm.Species == 0)
-                return;
-            if (pkm.Species > MaxSpeciesID)
-                return;
-            if (Version == GameVersion.Unknown)
-                return;
-
-            int bit = pkm.Species - 1;
+            int bit = species - 1;
             int ofs = bit >> 3;
-            byte bitval = (byte)(1 << (bit & 7));
-            // Set the Captured Flag
-            Data[(Japanese ? 0x259E : 0x25A3) + ofs] &= (byte)~bitval;
-            if (caught)
-                Data[(Japanese ? 0x259E : 0x25A3) + ofs] |= bitval;
+            SetFlag(PokedexCaughtOffset + ofs, bit & 7, caught);
+        }
+        public override bool GetSeen(int species)
+        {
+            int bit = species - 1;
+            int ofs = bit >> 3;
+            return GetFlag(PokedexSeenOffset + ofs, bit & 7);
+        }
+        public override bool GetCaught(int species)
+        {
+            int bit = species - 1;
+            int ofs = bit >> 3;
+            return GetFlag(PokedexCaughtOffset + ofs, bit & 7);
+        }
+
+        private const int SpawnFlagCount = 0xF0;
+        public bool[] EventSpawnFlags
+        {
+            get
+            {
+                // RB uses 0xE4 (0xE8) flags, Yellow uses 0xF0 flags. Just grab 0xF0
+                bool[] data = new bool[SpawnFlagCount];
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = GetFlag(ObjectSpawnFlags + i >> 3, i & 7);
+                return data;
+            }
+            set
+            {
+                if (value?.Length != SpawnFlagCount)
+                    return;
+                for (int i = 0; i < value.Length; i++)
+                    SetFlag(ObjectSpawnFlags + i >> 3, i & 7, value[i]);
+            }
+        }
+
+        public override string GetString(int Offset, int Count) => StringConverter.GetString1(Data, Offset, Count, Japanese);
+        public override byte[] SetString(string value, int maxLength, int PadToSize = 0, ushort PadWith = 0)
+        {
+            if (PadToSize == 0)
+                PadToSize = maxLength + 1;
+            return StringConverter.SetString1(value, maxLength, Japanese, PadToSize, PadWith);
         }
     }
 }

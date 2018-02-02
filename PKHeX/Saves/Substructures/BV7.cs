@@ -5,7 +5,7 @@ namespace PKHeX.Core
     public class BV7 : BattleVideo
     {
         internal const int SIZE = 0x2BC0;
-        internal new static bool getIsValid(byte[] data)
+        internal new static bool IsValid(byte[] data)
         {
             return data.Length == SIZE;
         }
@@ -50,5 +50,8 @@ namespace PKHeX.Core
                 }
             }
         }
+
+        public int MusicID { get => Data[0x21C]; set => Data[0x21C] = (byte)value; }
+        public bool SilentBGM { get => MusicID == 0xFF; set => MusicID = (byte)(value ? 0xFF : MusicID); }
     }
 }

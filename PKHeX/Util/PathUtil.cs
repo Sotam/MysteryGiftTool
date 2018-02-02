@@ -1,29 +1,12 @@
-﻿using System;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 
 namespace PKHeX.Core
 {
     public partial class Util
     {
-        public static string get3DSLocation()
-        {
-            try
-            {
-                string[] DriveList = Environment.GetLogicalDrives();
-                for (int i = 1; i < DriveList.Length; i++) // Skip first drive (some users still have floppy drives and would chew up time!)
-                {
-                    string potentialPath = Path.Combine(DriveList[i], "Nintendo 3DS");
-                    if (Directory.Exists(potentialPath))
-                        return potentialPath;
-                }
-            }
-            catch { }
-            return null;
-        }
         public static string CleanFileName(string fileName)
         {
-            return Path.GetInvalidFileNameChars().Aggregate(fileName, (current, c) => current.Replace(c.ToString(), string.Empty));
+            return string.Concat(fileName.Split(Path.GetInvalidFileNameChars()));
         }
         public static string TrimFromZero(string input)
         {
