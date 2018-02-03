@@ -150,6 +150,8 @@ namespace MysteryGiftTool
                 CreateDirectoryIfNull(archive_dir);
                 var new_boss = fl.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Where(s => s.Contains("\t")).Select(BossMetadata.FromString).ToList();
                 var old_boss = old_fl.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Where(s => s.Contains("\t")).Select(BossMetadata.FromString).ToList();
+
+                int i = 0;
                 foreach (var boss in new_boss)
                 {
                     var server_data_url = string.Format(file_server, game_id, boss.Name);
@@ -163,6 +165,13 @@ namespace MysteryGiftTool
                     Log($"Downloaded {boss.FileName}.");
                     if (old_boss.Any(bm => boss.IsUpdatedVersionOf(bm)))
                         Log($"{boss.FileName} is an updated version of an old archive!");
+
+                    if (i >= 10)
+                    {
+                        break;
+                    }
+
+                    i++;
                 }
             }
         }
@@ -210,23 +219,26 @@ namespace MysteryGiftTool
                         {
                             count++;
                             var currentWc = contentData.Take(0x310).ToArray();
-                            File.WriteAllBytes(Path.Combine(wcfulldir, boss.FileName + $"_{count}.wc{game.Generation}full"), currentWc);
+
+                            var gameId = contentData.Take(0x03).ToArray();
+
+                            File.WriteAllBytes(Path.Combine(wcfulldir, boss.FileName + $"_{GetGameVersion(gameId, game.Generation)}_{count}.wc{game.Generation}full"), currentWc);
 
                             MysteryGift wc = null;
                             if (game.Generation == 6)
                             {
                                 wc = new WC6(currentWc);
-                                File.WriteAllBytes(Path.Combine(wcdir, boss.FileName + $"{count}.wc{game.Generation}"), wc.Data);
+                                File.WriteAllBytes(Path.Combine(wcdir, boss.FileName + $"_{GetGameVersion(gameId, game.Generation)}_{count}.wc{game.Generation}"), wc.Data);
                             }
                             else if (game.Generation == 7)
                             {
                                 wc = new WC7(currentWc);
-                                File.WriteAllBytes(Path.Combine(wcdir, boss.FileName + $"{count}.wc{game.Generation}"), wc.Data);
+                                File.WriteAllBytes(Path.Combine(wcdir, boss.FileName + $"_{GetGameVersion(gameId, game.Generation)}_{count}.wc{game.Generation}"), wc.Data);
                             }
 
                             Log($"{boss.FileName} ({count}) is a wondercard ({wc.Type}): ");
                             var fullDesc = Util.TrimFromZero(Encoding.Unicode.GetString(currentWc, 4, 0x1FC));
-                            Log(fullDesc);
+                            //Log(fullDesc);
 
                             Log(GetWonderCardDescription(wc));
                             contentData = contentData.Skip(0x310).ToArray(); // Keep remaining data
@@ -257,6 +269,56 @@ namespace MysteryGiftTool
                     {
                         Log($"{boss.FileName} {contentData.Length} unknown file format");
                     }
+                }
+            }
+        }
+
+        private static string GetGameVersion(byte[] data, int Generation)
+        {
+            var gameInt = BitConverter.ToInt16(data, 0);
+
+            if (Generation == 6) // XY ORAS
+            {
+                switch (gameInt)
+                {
+                    case 1:
+                        return "X";
+                    case 2:
+                        return "Y";
+                    case 3:
+                        return "XY";
+                    case 4:
+                        return "AS";
+                    case 8:
+                        return "OR";
+                    case 12:
+                        return "ORAS";
+                    case 15:
+                        return "XYASOR";
+                    default:
+                        return "UNKNOWN";
+                }
+            }
+            else // SM USUM
+            {
+                switch (gameInt)
+                {
+                    case 1:
+                        return "S";
+                    case 2:
+                        return "M";
+                    case 3:
+                        return "SM";
+                    case 4:
+                        return "US";
+                    case 8:
+                        return "UM";
+                    case 12:
+                        return "USUM";
+                    case 15:
+                        return "SMUSUM";
+                    default:
+                        return "UNKNOWN";
                 }
             }
         }
