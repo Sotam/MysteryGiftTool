@@ -294,7 +294,7 @@ namespace MysteryGiftTool
                     case 12:
                         return "ORAS";
                     case 15:
-                        return "XYASOR";
+                        return "XYORAS";
                     default:
                         return "UNKNOWN";
                 }
