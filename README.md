@@ -1,7 +1,7 @@
 # MysteryGiftTool
 ![License](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
-Automatic tracking/downloading/decryption/extraction of Gen VI/VII Mystery Gifts/PGL Regulations. Modified by Sotam to support multiple WCs in a single BOSS file.
+Automatic tracking/downloading/decryption/extraction of Gen VI/VII Mystery Gifts/PGL Regulations. Modified by Sotam to support extraction of multiple WCs in a single BOSS file.
 
 Note: Automatic decryption/extraction requires you to dump the arm 9 bootrom from your own 3DS.
 
